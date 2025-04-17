@@ -1,47 +1,29 @@
-# Whisper API in Docker Container
+# PDF to Markdown Converter API
 
-Whisper API built using FastAPI inside a Docker container.
+This API is built using FastAPI and converts PDF files to Markdown format using Docling.
 
 ## API Documentation
 
-### POST /whisper/
+### POST /convert_pdf_to_md/
 
-This endpoint accepts a list of audio files, transcribes them using the Whisper model, and returns the transcripts in JSON format.
+This endpoint accepts a PDF file, converts it to Markdown, and returns the result in JSON format.
 
 #### Request
 
-*   **files**: A list of audio files to be transcribed.
+*   **files**: A PDF file to be converted.
 
 #### Response
 
-*   **results**: A list of dictionaries containing the filename and transcript for each uploaded file.
-
-#### Example Response
-
-```json
-{
-  "results": [
-    {
-      "filename": "audio1.mp3",
-      "transcript": "This is the transcript of audio1.mp3"
-    },
-    {
-      "filename": "audio2.wav",
-      "transcript": "This is the transcript of audio2.wav"
-    }
-  ]
-}
-```
+*   **output**: The converted Markdown content.
 
 #### Example Usage with curl
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8003/whisper/' \
+  'http://localhost:8002/docling/' \
   -H 'accept: application/json' \
   -H 'Content-Type: multipart/form-data' \
-  -F 'files=@audio1.mp3;type=audio/mpeg' \
-  -F 'files=@audio2.wav;type=audio/wav'
+  -F 'files=@example.pdf;type=application/pdf'
 ```
 
 ## Dependencies
@@ -52,16 +34,12 @@ The project requires the following dependencies:
 *   `aiofiles`
 *   `python-multipart`
 *   `uvicorn`
+*   `docling`
 
 These dependencies are listed in `requirements.txt`.
 
 ## Running the Application
 
-1.  Build the Docker image using the provided `Dockerfile`.
-2.  Run the Docker container using `docker-compose up`.
+1.  Install the dependencies using `pip install -r requirements.txt`.
+2.  Run the application using `uvicorn fastapi_app:app --reload`.
 3.  Access the API documentation at `http://localhost:8000/docs`.
-
-## Notes
-
-*   The application uses the Whisper model for transcription, which is loaded onto the available GPU if one is present.
-*   The `/` endpoint redirects to the API documentation.
