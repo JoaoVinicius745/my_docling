@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  seu-servico:
+    build:
+      context: .  # Diretório onde está o Dockerfile
+      dockerfile: Dockerfile  # Nome do Dockerfile (pode ser outro se necessário)
+    container_name: whisper  # Opcional
+    ports:
+      - "8002:8000"  # Mapeamento de portas (host:container)
+    volumes:
+      - ./app:/app  # Mapeamento de volume (host:container)
+    restart: unless-stopped  # Reinicia automaticamente
