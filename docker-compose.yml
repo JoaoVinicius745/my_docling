@@ -1,11 +1,11 @@
-version: '3.8'
+version: '3.9'
 
 services:
   seu-servico:
     build:
       context: .  # Diretório onde está o Dockerfile
       dockerfile: Dockerfile  # Nome do Dockerfile (pode ser outro se necessário)
-    container_name: whisper  # Opcional
+    container_name: docling  # Opcional
     ports:
       - "8002:8000"  # Mapeamento de portas (host:container)
     volumes:

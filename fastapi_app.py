@@ -1,30 +1,39 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-import base64
-from docling.datamodel.base import DocumentInput
 from docling.document_converter import DocumentConverter
+import tempfile
+import os
+from fastapi.concurrency import run_in_threadpool
 
 app = FastAPI()
 
+async def convert_file_to_markdown(file_path: str) -> str:
+    """Converts a document to Markdown."""
+    try:
+        converter = DocumentConverter()
+        return await run_in_threadpool(converter.convert, file_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao converter o arquivo: {str(e)}")
+
 @app.post("/docling/")
-async def docling(files: List[UploadFile] = File(...)):
-    if not files:
-        raise HTTPException(status_code=400, detail="No file was provided")
+async def convert_to_markdown(file: UploadFile = File(...)) -> JSONResponse:
+    """Handles document conversion to Markdown."""
+    if not file.filename.endswith(('.docx', '.odt', '.pdf')):
+        raise HTTPException(status_code=400, detail="Formato de arquivo não suportado")
 
-    file = files[0]
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    try:
+        suffix = os.path.splitext(file.filename)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            contents = await file.read()
+            tmp.write(contents)
+            tmp_path = tmp.name
 
-    converter = DocumentConverter()
-    document = DocumentInput(file.file.read())
-    result = converter.convert(document)
+        try:
+            markdown_text = await convert_file_to_markdown(tmp_path)
+        finally:
+            os.remove(tmp_path)
 
-    if result.document is not None:
-        md_content = result.document.export_to_markdown()
-        return JSONResponse(content={"output": md_content})
-    else:
-        raise HTTPException(status_code=500, detail="Failed to convert PDF to Markdown")
+        return JSONResponse(content={"markdown": markdown_text})
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the PDF to Markdown converter API"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao processar o arquivo: {str(e)}")
